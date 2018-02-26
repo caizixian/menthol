@@ -10,7 +10,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='menthol',
-    version='0.0.1',
+    version=__import__("menthol").__VERSION__,
     description='A library that helps you exercising good benchmarking methodology',
     long_description=long_description,
     url='https://github.com/caizixian/menthol',
@@ -27,6 +27,12 @@ setup(
     ],
 
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
+
+    entry_points={
+        'console_scripts': [
+            'menthol = menthol.__main__:main'
+        ]
+    },
 
     install_requires=[],
     extras_require={},
