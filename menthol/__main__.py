@@ -5,10 +5,11 @@ import argparse
 import sys
 from pathlib import Path
 
-from menthol import __VERSION__
+from menthol.__version__ import __VERSION__
 from menthol.util import import_by_path, drivers_in_module
 
 logger = logging.getLogger(__name__)
+
 
 def setup_parser():
     parser = argparse.ArgumentParser()
