@@ -59,6 +59,7 @@ class Driver(object):
             self.begin()
             self.end()
         self.stop()
+        self.report(self.results)
 
     def begin(self):
         result = {
@@ -114,3 +115,12 @@ class Driver(object):
             yaml.dump(log, log_file)
 
         logger.info("Log dumped to {}".format(log_path))
+
+    def report(self, results):
+        """
+        results: [result] (different drive args)
+        result: {driver_args, benchmarks}
+        benchmarks: {bm.name: [log] len: invocatio*configs}
+        log: {cmd, run_kwargs, stdout, stderr, stats, config.name}
+        """
+        pass
