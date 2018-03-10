@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-
-
 class Configuration(object):
     """Configuration describes how a benchmark should be run.
     It selects the implementation (for example, different implementations) and

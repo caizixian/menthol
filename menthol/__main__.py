@@ -5,6 +5,7 @@ import argparse
 import sys
 from pathlib import Path
 
+from menthol import Driver
 from menthol.__version__ import __VERSION__
 from menthol.util import import_by_path, drivers_in_module
 
@@ -24,6 +25,9 @@ def setup_parser():
     subparsers = parser.add_subparsers()
     clean = subparsers.add_parser("clean")
     clean.set_defaults(which="clean")
+    process = subparsers.add_parser("process")
+    process.set_defaults(which="process")
+    process.add_argument("LOGFILE")
     return parser
 
 
@@ -47,19 +51,20 @@ def main():
     mod = import_by_path("custom_driver", file_path)
     logger.info("{} loaded".format(file_path))
 
-    # Handle subcommands
-    if not args.get("which"):
-        # Default subcommand, which is benchmarking
-        for driver_cls in drivers_in_module(mod):
-            driver = driver_cls()
+    for driver_cls in drivers_in_module(mod):
+        driver = driver_cls()  # type: Driver
+        # Handle subcommands
+        if not args.get("which"):
+            # Default subcommand, which is benchmarking
             driver.set_invocation(args["invocation"])
             driver.build()
             driver.start()
-    elif args.get("which") == "clean":
-        # Cleanings
-        for driver_cls in drivers_in_module(mod):
-            driver = driver_cls()
+        elif args.get("which") == "clean":
+            # Cleanings
             driver.clean()
+        elif args.get("which") == "process":
+            driver.load_result(args["LOGFILE"])
+            driver.process()
 
 
 if __name__ == "__main__":

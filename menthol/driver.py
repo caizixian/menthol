@@ -5,6 +5,8 @@ import sys
 import logging
 import subprocess
 from collections import defaultdict
+from functools import reduce
+from copy import deepcopy
 
 import yaml
 try:
@@ -18,12 +20,18 @@ logger = logging.getLogger(__name__)
 
 
 class Driver(object):
-    def __init__(self, log_dir):
+    def __init__(self, log_dir, pipelines=None):
         self.log_dir = log_dir
         self.benchmarks = []
         self.configurations = []
         self.args = {}
         self.results = []
+        if pipelines:
+            self.pipelines = pipelines
+        else:
+            self.pipelines = []
+        for pipeline in self.pipelines:
+            pipeline.bind_driver(self)
 
     def set_invocation(self, invocation):
         self.invocation = invocation
@@ -59,7 +67,15 @@ class Driver(object):
             self.begin()
             self.end()
         self.stop()
-        self.report(self.results)
+        self.process()
+
+    def load_result(self, path):
+        with open(path) as log_file:
+            log = yaml.load(log_file)
+            self.results = log["results"]
+
+    def process(self):
+        reduce(lambda x, y: y.process(x), self.pipelines, deepcopy(self.results))
 
     def begin(self):
         result = {
@@ -115,12 +131,3 @@ class Driver(object):
             yaml.dump(log, log_file)
 
         logger.info("Log dumped to {}".format(log_path))
-
-    def report(self, results):
-        """
-        results: [result] (different drive args)
-        result: {driver_args, benchmarks}
-        benchmarks: {bm.name: [log] len: invocatio*configs}
-        log: {cmd, run_kwargs, stdout, stderr, stats, config.name}
-        """
-        pass
