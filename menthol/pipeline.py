@@ -9,11 +9,9 @@ class Pipeline:
     def bind_driver(self, driver):
         self.driver = driver
 
-    def process(self, results):
+    def process(self, benchmark, results):
         """
-        results: [result] (one result for one set of driver args)
-        result: {"driver_args": driver_args, "benchmarks": benchmarks}
-        benchmarks: {bm.name(str) -> [log](len: invocatio*configs)}
+        results: {config_name -> {driver_args -> [log](len: invocatio)}
         log: {
             "cmd": [str], cmd passed to subprocess.run
             "run_kwargs": dict, keyword arguments passed to subprocess.run

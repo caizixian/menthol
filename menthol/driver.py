@@ -19,6 +19,32 @@ from menthol.util import subprocess_run, sanity_check
 logger = logging.getLogger(__name__)
 
 
+def group_by_benchmark(results):
+    """
+    results: [result] (one result for one set of driver args)
+    result: {"driver_args": driver_args, "benchmarks": benchmarks}
+    benchmarks: {bm.name(str) -> [log](len: invocatio*configs)}
+    log: {
+        "cmd": [str], cmd passed to subprocess.run
+        "run_kwargs": dict, keyword arguments passed to subprocess.run
+        "stdout": str, stdout of execution through subprocess.PIPE
+        "stderr": str, stdout of execution through subprocess.PIPE
+        "stats": str, benchmark defined stats (MFlops/s, LLC misses, etc.)
+        "config": str, canonical string of the config (production-32M, etc.)
+    }
+    """
+    new_results = defaultdict(
+        lambda: defaultdict(lambda: defaultdict(list)))
+    for result in results:
+        driver_args = frozenset(result["driver_args"].items())
+        benchmarks = result["benchmarks"]
+        for bm_name in benchmarks:
+            logs = benchmarks[bm_name]
+            for log in logs:
+                new_results[bm_name][log["config"]][driver_args].append(
+                    log["stats"])
+    return new_results
+
 class Driver(object):
     def __init__(self, log_dir, pipelines=None):
         self.log_dir = log_dir
@@ -75,7 +101,12 @@ class Driver(object):
             self.results = log["results"]
 
     def process(self):
-        reduce(lambda x, y: y.process(x), self.pipelines, deepcopy(self.results))
+        grouped_result = group_by_benchmark(self.results)
+        for bm in self.benchmarks:
+            pipelines = bm.pipelines
+            reduce(lambda x, y: y.process(bm, x),
+                   pipelines,
+                   deepcopy(grouped_result[bm.name]))
 
     def begin(self):
         result = {
