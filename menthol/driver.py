@@ -67,6 +67,9 @@ class Driver(object):
         self.benchmarks.append(benchmark)
         benchmark.set_driver(self)
 
+    def prune_benchmark(self, benchmarks):
+        self.benchmarks = [b for b in self.benchmarks if b.name in benchmarks]
+
     def add_configuration(self, configuration):
         self.configurations.append(configuration)
 
