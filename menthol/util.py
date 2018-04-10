@@ -5,7 +5,6 @@ import importlib.util
 import inspect
 import os
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -40,3 +39,7 @@ def sanity_check():
         "uname": os.uname(),
         "cpu_count": os.cpu_count()
     }
+
+
+def shorten_uuid(uuid):
+    return hex(uuid.fields[0])[2:]

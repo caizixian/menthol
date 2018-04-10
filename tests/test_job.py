@@ -1,6 +1,7 @@
 from menthol import Job
 from menthol.job import BashJob, PBSJob
 
+
 def test_job_empty():
     j = Job()
     assert len(j.env) == 0
@@ -11,12 +12,14 @@ def test_job_empty():
     assert len(j.env) == 2
     assert j.env.get("foo") == 42
 
+
 def test_job_set_env():
     j = Job()
     assert len(j.env) == 0
     j.set_env({"foo": 1, "bar": 2})
     assert len(j.env) == 2
     assert j.env.get("foo") == 1
+
 
 def test_job_update_env():
     j = Job()
@@ -25,9 +28,10 @@ def test_job_update_env():
     assert len(j.env) == 2
     assert j.env.get("foo") == 42
 
+
 def test_bash_job():
     j = BashJob()
-    j.add_cmd(["./a.out"], env = {"RUST_TRACE": "DEBUG"})
+    j.add_cmd(["./a.out"], env={"RUST_TRACE": "DEBUG"})
     j.set_env({"LD_LIBRARY_PATH": "/opt/lib:$LD_LIBRARY_PATH"})
     script = j.generate_script()
     assert script == [
@@ -36,9 +40,10 @@ def test_bash_job():
         "RUST_TRACE=DEBUG ./a.out"
     ]
 
+
 def test_pbs_job():
     j = PBSJob()
-    j.add_cmd(["./a.out"], env = {"RUST_TRACE": "DEBUG"})
+    j.add_cmd(["./a.out"], env={"RUST_TRACE": "DEBUG"})
     j.set_env({"LD_LIBRARY_PATH": "/opt/lib:$LD_LIBRARY_PATH"})
     j.set_ncpus(16)
     j.set_project("c25")

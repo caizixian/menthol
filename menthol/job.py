@@ -1,17 +1,27 @@
 import uuid
+from menthol.util import shorten_uuid
+
 
 class Job(object):
     def __init__(self, name=""):
-        self.id = uuid.uuid1()
+        self.id = uuid.uuid4()
         self.name = name
         self.cmds = []
         self.env = {}
+        self.finished = False
+        self.short_id = shorten_uuid(id)
+        self.stdout_filename = "{}.o"
+        self.stderr_filename = "{}.e"
 
     def add_cmd(self, cmd, **kwargs):
         self.cmds.append((cmd, kwargs))
 
     def set_env(self, env):
         self.env.update(env)
+
+    def log_name(self):
+        return
+
 
 class BashJob(Job):
     def __init__(self):
@@ -29,11 +39,12 @@ class BashJob(Job):
             lines.append(" ".join(cmdline))
         return lines
 
+
 class PBSJob(BashJob):
     def __init__(self):
         super().__init__()
         self.directives = []
-    
+
     def generate_script(self):
         lines = super().generate_script()
         for d in self.directives:
@@ -45,7 +56,7 @@ class PBSJob(BashJob):
         The default project is specified by the PROJECT environment variable.
         """
         self.directives.append("-P {}".format(project))
-    
+
     def set_queue(self, queue):
         """Select the queue to run the job in.
         The queues you can use are listed by running nqstat.
@@ -60,7 +71,7 @@ class PBSJob(BashJob):
         it is always best to make it as accurate as possible.
         """
         self.directives.append("-l walltime={}".format(walltime))
-    
+
     def set_mem(self, mem):
         """The total memory limit across all nodes for the job – can be
         specified with units of “MB” or “GB” but only integer values can be
@@ -85,7 +96,7 @@ class PBSJob(BashJob):
         Broadwell nodes.
         """
         self.directives.append("-l ncpus={}".format(ncpus))
-    
+
     def set_jobfs(self, jobfs):
         """The requested job scratch space. This will reserve disk space, making
         it unavailable for other jobs, so please try not to overestimate your
@@ -142,7 +153,7 @@ class PBSJob(BashJob):
     def set_restartable(self):
         """Specifies your job is restartable, and if the job is executing on a
         node when it crashes, the job will be requeued.
-        
+
         Both resources used by and resource limits set for the original job will
         carry over to the requeued job. 
         Hence a restartable job must be checkpointing such that it will still be
