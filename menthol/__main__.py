@@ -16,8 +16,6 @@ def setup_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="change logging level to DEBUG")
-    parser.add_argument("-i", "--invocation", type=int, default=20,
-                        help="how many invocation")
     parser.add_argument("-b", "--benchmarks", type=str,
                         help="select benchmarks, separated by comma")
     parser.add_argument("--version", action="version",
@@ -25,11 +23,21 @@ def setup_parser():
     parser.add_argument("FILE",
                         help="path to discover drivers")
     subparsers = parser.add_subparsers()
+
+    build = subparsers.add_parser("build")
+    build.set_defaults(which="build")
+
+    run = subparsers.add_parser("run")
+    run.set_defaults(which="run")
+    run.add_argument("-i", "--invocation", type=int, default=20,
+                     help="how many invocation")
+
     clean = subparsers.add_parser("clean")
     clean.set_defaults(which="clean")
-    process = subparsers.add_parser("process")
-    process.set_defaults(which="process")
-    process.add_argument("LOGFILE")
+
+    analyse = subparsers.add_parser("analyse")
+    analyse.set_defaults(which="analyse")
+    analyse.add_argument("LOGDIR")
     return parser
 
 
@@ -59,17 +67,17 @@ def main():
             driver.prune_benchmark(args["benchmarks"].split(","))
 
         # Handle subcommands
-        if not args.get("which"):
-            # Default subcommand, which is benchmarking
+        if args.get("which") == "run":
             driver.set_invocation(args["invocation"])
-            driver.build()
             driver.start()
         elif args.get("which") == "clean":
-            # Cleanings
             driver.clean()
-        elif args.get("which") == "process":
-            driver.load_result(args["LOGFILE"])
-            driver.process()
+        elif args.get("which") == "build":
+            driver.build()
+        elif args.get("which") == "analyse":
+            driver.analyse(args["LOGDIR"])
+        else:
+            parsers.print_help()
 
 
 if __name__ == "__main__":

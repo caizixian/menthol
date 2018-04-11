@@ -9,9 +9,10 @@ class Job(object):
         self.cmds = []
         self.env = {}
         self.finished = False
-        self.short_id = shorten_uuid(id)
-        self.stdout_filename = "{}.o"
-        self.stderr_filename = "{}.e"
+        self.short_id = shorten_uuid(self.id)
+        self.stdout_filename = "{}.o".format(self.id)
+        self.stderr_filename = "{}.e".format(self.id)
+        self.metadata = {}
 
     def add_cmd(self, cmd, **kwargs):
         self.cmds.append((cmd, kwargs))
@@ -21,6 +22,18 @@ class Job(object):
 
     def log_name(self):
         return
+
+    def set_metadata(self, metadata):
+        self.metadata.update(metadata)
+
+    def __str__(self):
+        return "{}({})\nenv: {}\ncmds: {}\nmetadata: {}".format(
+            self.name,
+            self.id,
+            self.env,
+            self.cmds,
+            self.metadata
+        )
 
 
 class BashJob(Job):
@@ -34,7 +47,10 @@ class BashJob(Job):
         for k, v in self.env.items():
             lines.append("export {}={}".format(k, v))
         for cmd, kwargs in self.cmds:
-            cmdline = ["{}={}".format(k, v) for k, v in kwargs["env"].items()]
+            cmdline = []
+            if "env" in kwargs:
+                for k, v in kwargs["env"].items():
+                    cmdline.append("{}={}".format(k, v))
             cmdline.extend(cmd)
             lines.append(" ".join(cmdline))
         return lines

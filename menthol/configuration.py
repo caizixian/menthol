@@ -17,8 +17,12 @@ class Configuration(object):
     def build(self, benchmark):
         raise NotImplementedError
 
-    def get_cmd(self, benchmark):
-        raise NotImplementedError
+    def realize_job(self, job, invocation, benchmark, driver):
+        job.set_metadata({
+            "benchmark": benchmark.name,
+            "invocation": invocation,
+            "configuration": self.name
+        })
 
     def clean(self, benchmark):
         raise NotImplementedError

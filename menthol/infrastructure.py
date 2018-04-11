@@ -1,76 +1,106 @@
 import subprocess
+import os
+import tempfile
+import datetime
+import socket
+import pathlib
+import logging
+import json
+
+from menthol.job import BashJob, PBSJob
+
+logger = logging.getLogger(__name__)
 
 
 class Infrastructure(object):
-    def __init__(self, name):
-        self.name = name
+    def __init__(self, name=None):
+        if not name:
+            date_str = datetime.datetime.now().strftime("%Y-%m-%d-%H%M%S")
+            hostname = socket.gethostname()
+            self.name = "{}-{}".format(hostname, date_str)
+        else:
+            self.name = name
 
     def schedule(self, jobs):
-        self.jobs = {j.short_id: j for j in jobs}
+        self.jobs = jobs
 
     def run(self):
         raise NotImplementedError
 
-    def is_finished(self):
-        raise NotImplementedError
-
-    def assemble(self):
-        raise NotImplementedError
-
 
 class Standalone(Infrastructure):
-    def __init__(self):
-        super().__init__("Standalone")
+    def __init__(self, basedir=None):
+        super().__init__()
+        self.job_class = BashJob
+        self.basedir = basedir if basedir else os.path.join(
+            os.getcwd(), "results", self.name)
+        pathlib.Path(self.basedir).mkdir(parents=True, exist_ok=True)
 
     def schedule(self, jobs):
         super().schedule(jobs)
+        # iterate through benchmarks
+        # interleaving configurations
+        self.jobs.sort(key=lambda x: (
+            x.metadata["benchmark"],
+            x.metadata["invocation"],
+            x.metadata["configuration"]
+        ))
+        manifest_filename = os.path.join(self.basedir, "MANIFEST")
+        with open(manifest_filename, "a") as manifest_file:
+            for j in jobs:
+                manifest_file.write("{} {}\n".format(
+                    j.id,
+                    json.dumps(j.metadata)
+                ))
 
-    def is_finished(self):
-        return True
+    def run(self):
+        for j in self.jobs:
+            stdout_filename = os.path.join(
+                self.basedir,
+                j.stdout_filename
+            )
+            stderr_filename = os.path.join(
+                self.basedir,
+                j.stderr_filename
+            )
+            with open(stdout_filename, "w") as stdout_file:
+                with open(stderr_filename, "w") as stderr_file:
+                    script = tempfile.NamedTemporaryFile(buffering=0)
+                    script.write(
+                        "\n".join(j.generate_script()).encode("utf-8"))
+                    logger.info("Running job: {}".format(j))
+                    subprocess.run(
+                        ["bash", script.name],
+                        stdout=stdout_file,
+                        stderr=stderr_file
+                    )
+                    script.close()
+
+
+"""
+class MultiNodes(Infrastructure):
+    def __init__(self, machines):
+        super().__init__()
+        self.machines = machines
+        self.job_class = BashJob
 
 
 class Raijin(Infrastructure):
     def __init__(self):
-        super().__init__("Raijin")
-
-
-class Moma(Infrastructure):
-    def __init__(self, machines, log_folder, master="squirrel"):
-        super().__init__("Moma")
-        self.machines = machines
-        self.master = master
-        self.log_folder = log_folder
+        super().__init__()
+        self.job_class = PBSJob
 
     def schedule(self, jobs):
         super().schedule(jobs)
-
-    def is_finished(self):
-        master_host = "{}.moma".format(self.master)
-        ssh = subprocess.Popen(
-            ["ssh", master_host, "bash"],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            universal_newlines=True,
-            bufsize=0
-        )
-        ssh.stdin.write("cd {}".format(self.log_folder))
         for j in self.jobs:
-            if not j.finished:
-                ssh.stdin.write("ls {} > /dev/null\n".format(j.stdout_filename))
-                ssh.stdin.write("echo {} $?".format(j.stdout_filename))
-                ssh.stdin.write("ls {} > /dev/null\n".format(j.stderr_filename))
-                ssh.stdin.write("echo {} $?".format(j.stderr_filename))
-        ssh.stdin.close()
+            j.
 
-        for line in ssh.stdout:
-            shortid, exitcode = line.strip().split()
-            if exitcode == "0":
-                self.jobs[shortid].finished = True
-
+    def run(self):
         for j in self.jobs:
-            if not j.finished:
-                return False
-        return True
-
-    def assemble(self):
-        raise NotImplementedError
+            pbs_filename = "{}.pbs".format(j.short_id)
+            with open(pbs_filename, "w") as pbs_file:
+                pbs_file.write("\n".join(j.generate_script()))
+            subprocess.run(
+                ["qsub", ]
+            )
+"""
