@@ -71,3 +71,6 @@ def group_by_benchmark(results):
                 new_results[bm_name][log["config"]][driver_args].append(
                     log["stats"])
     return new_results
+
+def frozen_dict(d):
+    return frozenset(sorted(list(d.items())))

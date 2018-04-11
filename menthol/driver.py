@@ -1,8 +1,14 @@
 import sys
 import logging
 import subprocess
+import os
+import json
+from collections import defaultdict
+from functools import reduce
+from copy import deepcopy
 
 from menthol.infrastructure import Standalone
+from menthol.util import frozen_dict
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +53,36 @@ class Driver(object):
                 configuration.build(benchmark)
 
     def analyse(self, logdir):
-        raise NotImplementedError
+        logs = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+        with open(os.path.join(logdir, "MANIFEST")) as manifest_file:
+            for line in manifest_file:
+                cols = line.split("\t")
+                uuid = cols[0]
+                metadata = json.loads(cols[3])
+                with open(os.path.join(logdir,"{}.o".format(uuid))) as stdout_file:
+                    stdout = stdout_file.read()
+                with open(os.path.join(logdir,"{}.e".format(uuid))) as stderr_file:
+                    stderr = stderr_file.read()
+                bm = metadata["benchmark"]
+                config = metadata["configuration"]
+                driver_args = frozen_dict(metadata["driver_args"])
+                logs[bm][config][driver_args].append({
+                    "stdout": stdout,
+                    "stderr": stderr
+                })
+        for bm in self.benchmarks:
+            bm_result = deepcopy(logs[bm.name])
+            for config in bm_result:
+                for driver_args in bm_result[config]:
+                    bm_result[config][driver_args] = [
+                        bm.parse(log["stdout"], log["stderr"])
+                        for log in bm_result[config][driver_args]
+                    ]
+                        
+            pipelines = bm.pipelines
+            reduce(lambda x, y: y.process(bm, x),
+                   pipelines,
+                   bm_result)
 
     def start(self):
         if not getattr(self, "invocation"):

@@ -48,8 +48,10 @@ class Standalone(Infrastructure):
         manifest_filename = os.path.join(self.basedir, "MANIFEST")
         with open(manifest_filename, "a") as manifest_file:
             for j in jobs:
-                manifest_file.write("{} {}\n".format(
+                manifest_file.write("{}\t{}\t{}\t{}\n".format(
                     j.id,
+                    json.dumps(j.env),
+                    json.dumps(j.cmds),
                     json.dumps(j.metadata)
                 ))
 
