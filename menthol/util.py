@@ -4,6 +4,7 @@ import logging
 import importlib.util
 import inspect
 import os
+import pathlib
 from collections import defaultdict
 
 logger = logging.getLogger(__name__)
@@ -72,5 +73,10 @@ def group_by_benchmark(results):
                     log["stats"])
     return new_results
 
+
 def frozen_dict(d):
     return frozenset(sorted(list(d.items())))
+
+
+def mkdirp(path):
+    pathlib.Path(path).mkdir(parents=True, exist_ok=True)

@@ -1,5 +1,11 @@
 import uuid
+import tempfile
+import subprocess
+import logging
+
 from menthol.util import shorten_uuid
+
+logger = logging.getLogger(__name__)
 
 
 class Job(object):
@@ -54,6 +60,17 @@ class BashJob(Job):
             cmdline.extend(cmd)
             lines.append(" ".join(cmdline))
         return lines
+
+    def run(self, **kwargs):
+        logger.info("Running job: {}".format(self))
+        script = tempfile.NamedTemporaryFile(buffering=0)
+        script.write(
+            "\n".join(self.generate_script()).encode("utf-8"))
+        subprocess.run(
+            ["bash", script.name],
+            **kwargs
+        )
+        script.close()
 
 
 class PBSJob(BashJob):

@@ -14,6 +14,10 @@ logger = logging.getLogger(__name__)
 
 
 class Driver(object):
+    """It also includes options, which is shared by all configurations (for
+    example, relative heap size, the number of threads, etc.)
+    """
+    
     def __init__(self, log_dir, pipelines=None, infrastructure=None):
         self.log_dir = log_dir
         self.benchmarks = []
@@ -45,12 +49,12 @@ class Driver(object):
     def clean(self):
         for benchmark in self.benchmarks:
             for configuration in self.configurations:
-                configuration.clean(benchmark)
+                benchmark.clean(configuration)
 
     def build(self):
         for benchmark in self.benchmarks:
             for configuration in self.configurations:
-                configuration.build(benchmark)
+                benchmark.build(configuration)
 
     def analyse(self, logdir):
         logs = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
@@ -102,12 +106,7 @@ class Driver(object):
             for config in self.configurations:
                 for i in range(0, self.invocation):
                     j = self.infrastructure.job_class()
-                    config.realize_job(
-                        job=j,
-                        invocation=i,
-                        benchmark=bm,
-                        driver=self
-                    )
+                    bm.realize_job(j, config, i)
                     jobs.append(j)
         return jobs
 

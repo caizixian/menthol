@@ -10,3 +10,16 @@ class Benchmark(object):
 
     def set_driver(self, driver):
         self.driver = driver
+
+    def build(self, configuration):
+        raise NotImplementedError
+
+    def realize_job(self, job, configuration, invocation):
+        job.set_metadata({
+            "benchmark": self.name,
+            "invocation": invocation,
+            "configuration": configuration.name
+        })
+
+    def clean(self, configuration):
+        raise NotImplementedError

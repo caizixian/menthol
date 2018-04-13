@@ -68,6 +68,7 @@ def main():
 
         # Handle subcommands
         if args.get("which") == "run":
+            driver.infrastructure.setup()
             driver.set_invocation(args["invocation"])
             driver.start()
         elif args.get("which") == "clean":
