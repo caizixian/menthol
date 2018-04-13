@@ -59,6 +59,7 @@ class BashJob(Job):
                     cmdline.append("{}={}".format(k, v))
             cmdline.extend(cmd)
             lines.append(" ".join(cmdline))
+        lines.append("")
         return lines
 
     def run(self, **kwargs):

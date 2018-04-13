@@ -8,7 +8,7 @@ import logging
 import json
 
 from menthol.job import BashJob, PBSJob
-from menthol.util import mkdirp
+from menthol.util import mkdirp, subprocess_run
 
 logger = logging.getLogger(__name__)
 
@@ -116,9 +116,9 @@ class Raijin(Infrastructure):
             )
             with open(pbs_filename, "w") as pbs_file:
                 pbs_file.write("\n".join(j.generate_script()))
-            subprocess.run([
+            subprocess_run([
                 "qsub",
-                "-e {}".format(stderr_filename),
-                "-o {}".format(stdout_filename),
+                "-e", stderr_filename,
+                "-o", stdout_filename,
                 pbs_filename
             ])
