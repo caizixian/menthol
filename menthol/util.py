@@ -44,7 +44,7 @@ def sanity_check():
 
 
 def shorten_uuid(uuid):
-    return hex(uuid.fields[0])[2:]
+    return str(uuid).split("-")[0]
 
 
 def group_by_benchmark(results):
