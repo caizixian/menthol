@@ -85,7 +85,6 @@ class Raijin(Infrastructure):
         self.job_class = PBSJob
         self.basedir = basedir if basedir else os.path.join(
             os.getcwd(), "results", self.name)
-        mkdirp(self.basedir)
 
     def setup(self):
         mkdirp(self.basedir)
