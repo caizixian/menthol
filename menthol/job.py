@@ -26,9 +26,6 @@ class Job(object):
     def set_env(self, env):
         self.env.update(env)
 
-    def log_name(self):
-        return
-
     def set_metadata(self, metadata):
         self.metadata.update(metadata)
 

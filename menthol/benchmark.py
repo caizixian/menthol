@@ -18,7 +18,7 @@ class Benchmark(object):
         job.set_metadata({
             "benchmark": self.name,
             "invocation": invocation,
-            "configuration": configuration.name
+            "configuration": configuration.descr
         })
 
     def clean(self, configuration):

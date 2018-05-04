@@ -11,3 +11,8 @@ class Configuration(object):
     
     def update_args(self, args):
         self.args.update(args)
+        return self
+
+    def set_description(self, descr):
+        self.descr = descr
+        return self
