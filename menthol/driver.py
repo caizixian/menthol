@@ -63,7 +63,6 @@ class Driver(object):
         logs = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
         bm_names = [b.name for b in self.benchmarks]
         config_descrs = [c.descr for c in self.configurations]
-        print(config_descrs)
         with open(os.path.join(logdir, "MANIFEST")) as manifest_file:
             for line in manifest_file:
                 cols = line.split("\t")
