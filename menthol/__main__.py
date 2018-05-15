@@ -18,6 +18,8 @@ def setup_parser():
                         help="change logging level to DEBUG")
     parser.add_argument("-b", "--benchmarks", type=str,
                         help="select benchmarks, separated by comma")
+    parser.add_argument("-c", "--configurations", type=str,
+                        help="select configurations, separated by comma")                    
     parser.add_argument("--version", action="version",
                         version="menthol {}".format(__VERSION__))
     parser.add_argument("FILE",
@@ -65,7 +67,8 @@ def main():
         driver = driver_cls()  # type: Driver
         if args["benchmarks"]:
             driver.prune_benchmark(args["benchmarks"].split(","))
-
+        if args["configurations"]:
+            driver.prune_configurations(args["configurations"].split(","))
         # Handle subcommands
         if args.get("which") == "run":
             driver.infrastructure.setup()

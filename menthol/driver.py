@@ -40,6 +40,9 @@ class Driver(object):
     def prune_benchmark(self, benchmarks):
         self.benchmarks = [b for b in self.benchmarks if b.name in benchmarks]
 
+    def prune_configurations(self, configurations):
+        self.configurations = [c for c in self.configurations if c.descr in configurations]
+
     def add_configuration(self, configuration):
         self.configurations.append(configuration)
 
@@ -58,6 +61,9 @@ class Driver(object):
 
     def analyse(self, logdir):
         logs = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+        bm_names = [b.name for b in self.benchmarks]
+        config_descrs = [c.descr for c in self.configurations]
+        print(config_descrs)
         with open(os.path.join(logdir, "MANIFEST")) as manifest_file:
             for line in manifest_file:
                 cols = line.split("\t")
@@ -69,11 +75,12 @@ class Driver(object):
                     stderr = stderr_file.read()
                 bm = metadata["benchmark"]
                 config = metadata["configuration"]
-                driver_args = frozen_dict(metadata["driver_args"])
-                logs[bm][config][driver_args].append({
-                    "stdout": stdout,
-                    "stderr": stderr
-                })
+                if bm in bm_names and config in config_descrs:
+                    driver_args = frozen_dict(metadata["driver_args"])
+                    logs[bm][config][driver_args].append({
+                        "stdout": stdout,
+                        "stderr": stderr
+                    })
         for bm in self.benchmarks:
             bm_result = deepcopy(logs[bm.name])
             for config in bm_result:
